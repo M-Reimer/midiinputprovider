@@ -1,0 +1,43 @@
+{
+  "manifest_version": 2,
+  "name": "MIDI Input Provider",
+  "description": "This Addon provides midi input functionality using the Web MIDI API",
+  "version": "1.0.0",
+  "homepage_url": "https://github.com/M-Reimer/midiinputprovider",
+  "author": "Manuel Reimer",
+
+  "applications": {
+    "gecko": {
+      "id": "midiinputprovider@addons.m-reimer.de",
+      "strict_min_version": "50.0"
+    }
+  },
+
+  "icons": {
+    "24": "midiconnector.svg",
+    "32": "midiconnector.svg",
+    "50": "midiconnector.svg"
+  },
+
+  "content_scripts": [
+  {
+    "matches": ["<all_urls>"],
+    "js": ["requestmidiaccess.js", "contentscript.js"],
+    "all_frames": true,
+    "run_at": "document_start"
+  }
+  ],
+
+  "background": {
+    "scripts": ["backgroundscript.js"]
+  },
+
+  "options_ui": {
+    "page": "options.html",
+    "browser_style": true
+  },
+
+  "permissions": [
+    "nativeMessaging", "<all_urls>", "storage"
+  ]
+}

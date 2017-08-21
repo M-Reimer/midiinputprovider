@@ -1,0 +1,7 @@
+{
+  "name": "midiinputprovider",
+  "description": "Connector to get MIDI messages",
+  "path": "/usr/bin/midiinputprovider.pl",
+  "type": "stdio",
+  "allowed_extensions": [ "midiinputprovider@addons.m-reimer.de" ]
+}
