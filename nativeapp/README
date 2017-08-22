@@ -1,5 +1,0 @@
-This directory contains the so called "native application".
-
-It was written in Perl and allows the Firefox addon to access local MIDI devices
-
-It also contains a Makefile for easy installation on your system.
