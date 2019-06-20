@@ -23,8 +23,12 @@ var REQUESTMIDIACCESS = function() {
   function MIDIAccess(aList) {
     this.inputs = new Map();
     this.outputs = new Map();
-    this.onstatechange = false;
+    this.onstatechange = null;
     this.sysexEnabled = false;
+    this.addEventListener = function(){};
+    this.removeEventListener = function(){};
+    this.dispatchEvent = function(){};
+
     if (aList) {
       for (var index = 0; index < aList.length; index++) {
         var entry = aList[index];
@@ -34,25 +38,49 @@ var REQUESTMIDIACCESS = function() {
   };
 
   function MIDIInput(aListEntry) {
-    Object.defineProperty(this, 'id', {get: () => {return aListEntry.id;}});
-    this.manufacturer = "";
-    this.name = aListEntry.name;
-    this.type = "input";
-    this.version = "";
-    let state = "disconnected";
-    Object.defineProperty(this, 'state', {get: () => {return state;}});
+    // Constant values
+    new Map([
+      ['id', aListEntry.id],
+      ['name', aListEntry.name],
+      ['type', 'input'],
+      ['state', 'connected'],
+      ['manufacturer', ''],
+      ['version', 'ALSA library version 1.1.9']
+    ]).forEach((value, name) => {
+      Object.defineProperty(this, name, {
+        enumerable: true,
+        value: value
+      });
+    });
+
+    // Getter for connection status
     let connection = "closed";
-    Object.defineProperty(this, 'connection', {get: () => {return connection;}});
-    this.open = function(){};
-    this.close = function(){};
+    Object.defineProperty(this, 'connection', {
+      enumerable: true,
+      get: () => {return connection;}
+    });
+
+    // Dummy functions
+    this.open = function(){console.log("Midiinput.open");};
+    this.close = function(){console.log("Midiinput.close");};
+    this.dispatchEvent = function(){};
+    this.onstatechange = null;
 
     // Define our device-internal message callback.
     // Runs over all listeners and forwards messages to them.
     let listeners = [];
     let MidiCallback = (aMIDI) => {
       listeners.forEach((listener) => {
+        console.log("calling");
         listener({
-          currentTarget: "MIDIInput",
+          bubbles: true,
+          cancelBubble: false,
+          cancelable: false,
+          composed: false,
+          srcElement: this,
+          target: this,
+          currentTarget: this,
+          type: "midimessage",
           data: aMIDI
         });
       });
@@ -61,6 +89,7 @@ var REQUESTMIDIACCESS = function() {
     // "addEventListener" API. Only supported message type: midimessage
     // It is only supported to pass proper functions as aListener (no strings)
     this.addEventListener = (aEvent, aListener) => {
+      console.log("Midiinput.addEventListener", aEvent, aListener);
       if (aEvent !== "midimessage")
         return;
       if (typeof aListener !== "function")
@@ -71,8 +100,7 @@ var REQUESTMIDIACCESS = function() {
       listeners.push(aListener);
 
       // Bind our message callback if not already done.
-      if (state == "disconnected") {
-        state = "connected";
+      if (connection == "closed") {
         connection = "open";
         window.MidiInputProvider.BindCallback(aListEntry.id, MidiCallback);
       }
@@ -80,6 +108,7 @@ var REQUESTMIDIACCESS = function() {
 
     // "removeEventListener" API. Goes with the above one and removes listeners
     this.removeEventListener = (aEvent, aListener) => {
+      console.log("Midiinput.removeEventListener");
       if (aEvent !== "midimessage")
         return;
       if (typeof aListener !== "function")
@@ -91,13 +120,20 @@ var REQUESTMIDIACCESS = function() {
     }
 
     // "onmidimessage" API. Passed value is forwareded to the above functions
-    let onmidimessage;
-    Object.defineProperty(this, 'onmidimessage', {set: (aValue) => {
-      if (onmidimessage)
-        this.removeEventListener("midimessage", onmidimessage);
-      this.addEventListener("midimessage", aValue);
-      onmidimessage = aValue;
-    }});
+    let onmidimessage = null;
+    Object.defineProperty(this, 'onmidimessage', {
+      set: (aValue) => {
+        console.log("Midiinput.onmidimessage", aValue);
+        if (onmidimessage)
+          this.removeEventListener("midimessage", onmidimessage);
+        this.addEventListener("midimessage", aValue);
+        onmidimessage = aValue;
+      },
+      get: () => {
+        return onmidimessage;
+      },
+      enumerable: true
+    });
   }
 
   return new Promise(function(resolve, reject) {
