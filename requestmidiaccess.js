@@ -1,6 +1,6 @@
 /*
     Firefox addon "MIDI Input Provider"
-    Copyright (C) 2017  Manuel Reimer <manuel.reimer@gmx.de>
+    Copyright (C) 2019  Manuel Reimer <manuel.reimer@gmx.de>
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -34,31 +34,69 @@ var REQUESTMIDIACCESS = function() {
   };
 
   function MIDIInput(aListEntry) {
-    var context = this;
-    this._id = aListEntry.id;
-    Object.defineProperty(this, 'id', {get: function(){return context._id;}});
+    Object.defineProperty(this, 'id', {get: () => {return aListEntry.id;}});
     this.manufacturer = "";
     this.name = aListEntry.name;
     this.type = "input";
     this.version = "";
-    this._state = "disconnected";
-    Object.defineProperty(this, 'state', {get: function(){return context._state;}});
-    this._connection = "closed";
-    Object.defineProperty(this, 'connection', {get: function(){return context._connection}});
+    let state = "disconnected";
+    Object.defineProperty(this, 'state', {get: () => {return state;}});
+    let connection = "closed";
+    Object.defineProperty(this, 'connection', {get: () => {return connection;}});
     this.open = function(){};
     this.close = function(){};
-    Object.defineProperty(this, 'onmidimessage', {set: function(aValue) {
-      context._onmidimessage = aValue
-      if (context._state == "disconnected") {
-        context._state = "connected";
-        context._connection = "open";
-        window.MidiInputProvider.BindCallback(context._id, function(aMIDI){
-          context._onmidimessage({
-            currentTarget: "MIDIInput",
-            data: aMIDI
-          });
+
+    // Define our device-internal message callback.
+    // Runs over all listeners and forwards messages to them.
+    let listeners = [];
+    let MidiCallback = (aMIDI) => {
+      listeners.forEach((listener) => {
+        listener({
+          currentTarget: "MIDIInput",
+          data: aMIDI
         });
+      });
+    }
+
+    // "addEventListener" API. Only supported message type: midimessage
+    // It is only supported to pass proper functions as aListener (no strings)
+    this.addEventListener = (aEvent, aListener) => {
+      if (aEvent !== "midimessage")
+        return;
+      if (typeof aListener !== "function")
+        return
+      if (listeners.includes(aListener))
+        return;
+
+      listeners.push(aListener);
+
+      // Bind our message callback if not already done.
+      if (state == "disconnected") {
+        state = "connected";
+        connection = "open";
+        window.MidiInputProvider.BindCallback(aListEntry.id, MidiCallback);
       }
+    }
+
+    // "removeEventListener" API. Goes with the above one and removes listeners
+    this.removeEventListener = (aEvent, aListener) => {
+      if (aEvent !== "midimessage")
+        return;
+      if (typeof aListener !== "function")
+        return
+      if (!listeners.includes(aListener))
+        return;
+
+      listeners.splice(listeners.indexOf(aListener), 1);
+    }
+
+    // "onmidimessage" API. Passed value is forwareded to the above functions
+    let onmidimessage;
+    Object.defineProperty(this, 'onmidimessage', {set: (aValue) => {
+      if (onmidimessage)
+        this.removeEventListener("midimessage", onmidimessage);
+      this.addEventListener("midimessage", aValue);
+      onmidimessage = aValue;
     }});
   }
 
