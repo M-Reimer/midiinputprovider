@@ -71,3 +71,11 @@ browser.runtime.onConnect.addListener(function(aPort) {
     });
   }
 });
+
+var test = browser.runtime.connectNative("midiinputprovider");
+test.onDisconnect.addListener(function(aResponse) {
+  if (aResponse.error)
+    browser.tabs.create({url: browser.extension.getURL("native-app-missing.html")});
+  test.disconnect();
+});
+test.postMessage({command: "list"});
