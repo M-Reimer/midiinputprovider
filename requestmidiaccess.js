@@ -61,8 +61,8 @@ var REQUESTMIDIACCESS = function() {
     });
 
     // Dummy functions
-    this.open = function(){console.log("Midiinput.open");};
-    this.close = function(){console.log("Midiinput.close");};
+    this.open = function(){};
+    this.close = function(){};
     this.dispatchEvent = function(){};
     this.onstatechange = null;
 
@@ -71,7 +71,6 @@ var REQUESTMIDIACCESS = function() {
     let listeners = [];
     let MidiCallback = (aMIDI) => {
       listeners.forEach((listener) => {
-        console.log("calling");
         listener({
           bubbles: true,
           cancelBubble: false,
@@ -89,7 +88,6 @@ var REQUESTMIDIACCESS = function() {
     // "addEventListener" API. Only supported message type: midimessage
     // It is only supported to pass proper functions as aListener (no strings)
     this.addEventListener = (aEvent, aListener) => {
-      console.log("Midiinput.addEventListener", aEvent, aListener);
       if (aEvent !== "midimessage")
         return;
       if (typeof aListener !== "function")
@@ -108,7 +106,6 @@ var REQUESTMIDIACCESS = function() {
 
     // "removeEventListener" API. Goes with the above one and removes listeners
     this.removeEventListener = (aEvent, aListener) => {
-      console.log("Midiinput.removeEventListener");
       if (aEvent !== "midimessage")
         return;
       if (typeof aListener !== "function")
@@ -123,7 +120,6 @@ var REQUESTMIDIACCESS = function() {
     let onmidimessage = null;
     Object.defineProperty(this, 'onmidimessage', {
       set: (aValue) => {
-        console.log("Midiinput.onmidimessage", aValue);
         if (onmidimessage)
           this.removeEventListener("midimessage", onmidimessage);
         this.addEventListener("midimessage", aValue);

@@ -108,5 +108,5 @@ exportFunction(Init, our_context, {defineAs: "Init"});
 // The following lines inject the code from "requestmidiaccess.js" into page
 // context.
 var script = document.createElement("script");
-script.textContent = "navigator.requestMIDIAccess = " + REQUESTMIDIACCESS.toString();
+script.textContent = "Object.defineProperty(navigator, 'requestMIDIAccess', {enumerable: true, value: " + REQUESTMIDIACCESS.toString() + "});";
 document.documentElement.appendChild(script);
