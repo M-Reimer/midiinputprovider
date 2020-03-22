@@ -18,6 +18,7 @@
 use strict;
 use warnings;
 use IO::Handle;
+use Fcntl;
 use JSON::PP;
 
 # This is a list of known MIDI messages.
@@ -67,8 +68,8 @@ sub ConnectMidi {
     die("Invalid device name in ConnectMidi: $device\n");
   }
 
-  open(my $fh, '<', "/dev/snd/$device") or die("Can't open MIDI: $!\n");
-  while(read($fh, my $byte, 1)) {
+  sysopen(my $fh, "/dev/snd/$device", O_RDONLY) or die("Can't open MIDI: $!\n");
+  while(sysread($fh, my $byte, 1)) {
     $byte = ord($byte); # Convert character to byte
 
     # First bit is set --> Status byte
