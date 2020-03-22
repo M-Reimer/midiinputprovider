@@ -67,7 +67,7 @@ sub ConnectMidi {
     die("Invalid device name in ConnectMidi: $device\n");
   }
 
-  open(my $fh, '<', "/dev/snd/$device") or die("Can't open MIDI: $!\n");
+  open(my $fh, '<:raw', "/dev/snd/$device") or die("Can't open MIDI: $!\n");
   while(read($fh, my $byte, 1)) {
     $byte = ord($byte); # Convert character to byte
 
